@@ -1,0 +1,3 @@
+[submodule "fastapi"]
+	path = fastapi
+	url = git@github.com:askalach/fastapi.git
