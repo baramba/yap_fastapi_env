@@ -8,10 +8,28 @@ services:
       - ./postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     env_file:
         - ./postgres/.env
+  load_data:
+    build:
+      context: .
+      dockerfile: ./load_data/Dockerfile
+    env_file:
+      - ./load_data/.env
+    command: sh -c '/code/wait-for.sh db:5432 -- python load_data.py'
+    depends_on:
+      - db
   es:
     image: elasticsearch:7.17.2
     ports:
       - "9200:9200"
     environment:
       - discovery.type=single-node
+  etl:
+    build:
+      context: .
+      dockerfile: ./etl/Dockerfile
+    env_file:
+      - ./etl/.env
+    depends_on:
+      - db
+      - es
   
