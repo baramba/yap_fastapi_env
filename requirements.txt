@@ -1,0 +1,3 @@
+-r etl/requirements.txt
+-r fastapi/requirements.txt
+-r load_data/requirements.txt
