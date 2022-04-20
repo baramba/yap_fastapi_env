@@ -1,17 +1,56 @@
 version: "3.9"
 services:
   db:
+    container_name: database
     image: postgres:14.2
+    expose:
+      - ${DB_PORT}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - ./postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     env_file:
-        - ./postgres/.env
+      - .env
+  load_data:
+    container_name: load_data
+    build:
+      context: .
+      dockerfile: ./load_data/Dockerfile
+    env_file:
+      - .env
+    command: sh -c '/code/wait-for.sh db:${DB_PORT} -- python load_data.py'
+    depends_on:
+      - db
   es:
-    image: elasticsearch:7.17.2
+    container_name: es
+    image: elasticsearch:8.1.2
+    env_file:
+      - .env
+    expose:
+      - ${ELASTIC_PORT}
     ports:
-      - "9200:9200"
+      - "${ELASTIC_PORT}:${ELASTIC_PORT}"
     environment:
       - discovery.type=single-node
-  
+      - node.name=s4_01
+      - cluster.name=s4
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - xpack.security.enabled=false
+  redis:
+    env_file:
+      - .env
+    container_name: redis
+    image: redis:6.2.6
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    expose:
+      - ${REDIS_PORT}
+  etl:
+    build:
+      context: .
+      dockerfile: ./etl/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - es
