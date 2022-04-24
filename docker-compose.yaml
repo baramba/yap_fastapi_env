@@ -54,3 +54,17 @@ services:
     depends_on:
       - db
       - es
+  api:
+    build:
+      context: .
+      dockerfile: ./fastapi/Dockerfile
+    env_file:
+      - .env
+    container_name: api
+    ports:
+      - "${API_PORT}:8000"
+    expose:
+      - ${API_PORT}
+    depends_on:
+      - es
+      - redis
