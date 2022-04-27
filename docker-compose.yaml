@@ -3,10 +3,6 @@ services:
   db:
     container_name: database
     image: postgres:14.2
-    expose:
-      - ${DB_PORT}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - ./postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     env_file:
@@ -26,10 +22,6 @@ services:
     image: elasticsearch:8.1.2
     env_file:
       - .env
-    expose:
-      - ${ELASTIC_PORT}
-    ports:
-      - "${ELASTIC_PORT}:${ELASTIC_PORT}"
     environment:
       - discovery.type=single-node
       - node.name=s4_01
@@ -41,10 +33,6 @@ services:
       - .env
     container_name: redis
     image: redis:6.2.6
-    ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
-    expose:
-      - ${REDIS_PORT}
   nginx:
     container_name: nginx
     image: nginx:1.21.6
@@ -71,10 +59,6 @@ services:
     env_file:
       - .env
     container_name: api
-    ports:
-      - "${API_PORT}:8000"
-    expose:
-      - ${API_PORT}
     depends_on:
       - es
       - redis

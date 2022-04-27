@@ -1,1 +1,81 @@
-# fastapi_environment
+# Сервис Async API
+
+## Compose
+
+Файл docker-compose.yml обеспечивает работу всего проекта.
+
+```yaml
+version: "3.9"
+services:
+  db:
+    container_name: database
+    image: postgres:14.2
+    volumes:
+      - ./postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    env_file:
+      - .env
+  load_data:
+    container_name: load_data
+    build:
+      context: .
+      dockerfile: ./load_data/Dockerfile
+    env_file:
+      - .env
+    command: sh -c '/code/wait-for.sh db:${DB_PORT} -- python load_data.py'
+    depends_on:
+      - db
+  es:
+    container_name: es
+    image: elasticsearch:8.1.2
+    env_file:
+      - .env
+    environment:
+      - discovery.type=single-node
+      - node.name=s4_01
+      - cluster.name=s4
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - xpack.security.enabled=false
+  redis:
+    env_file:
+      - .env
+    container_name: redis
+    image: redis:6.2.6
+  nginx:
+    container_name: nginx
+    image: nginx:1.21.6
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    ports:
+      - 80:80
+    depends_on:
+      - api
+  etl:
+    build:
+      context: .
+      dockerfile: ./etl/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - es
+  api:
+    build:
+      context: ./fastapi/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    container_name: api
+    depends_on:
+      - es
+      - redis
+```
+
+## Настройка
+В корне дериктории создать файл .env на основе .env.example
+
+## Запуск 
+
+1. [Установить Docker Compose](https://docs.docker.com/compose/install/)
+1. Клонировать этот репозиторий
+1. Запустить все контейнеры командой `docker-compose up`
