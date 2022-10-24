@@ -1,6 +1,6 @@
 [submodule "fastapi"]
 	path = fastapi
-	url = git@github.com:askalach/fastapi.git
+	url = git@github.com:baramba/yap_fastapi.git
 [submodule "etl"]
 	path = etl
 	url = git@github.com:askalach/etl.git
